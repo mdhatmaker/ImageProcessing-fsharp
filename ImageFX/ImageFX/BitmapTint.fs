@@ -1,4 +1,4 @@
-﻿module BitmapShade
+﻿module BitmapTint
 
 
 open System.Drawing
@@ -8,26 +8,24 @@ open ImageFxLib
 
 
 // TODO: convert the 'for' loop into a better Seq operation (even better is parallel Seq)
-let ColorShade (redShade:float, greenShade:float, blueShade:float) (sourceBitmap:Bitmap) =
-    printfn "ColorShade: r=%.2f g=%.2f b=%.2f" redShade greenShade blueShade
+let ColorTint (redTint:float, greenTint:float, blueTint:float) (sourceBitmap:Bitmap) =
+    printfn "ColorTint: r=%.2f g=%.2f b=%.2f" redTint greenTint blueTint
     let sourceData =
         sourceBitmap.LockBits(
             new Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height),
             ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
     let pixelBuffer =
         Array.create (sourceData.Stride * sourceData.Height) 0uy
-
     Marshal.Copy(sourceData.Scan0, pixelBuffer, 0, pixelBuffer.Length)
-
     sourceBitmap.UnlockBits(sourceData)
 
     let ks = [for k in 0..(pixelBuffer.Length-1)/4 do yield k*4]
     
     ks
     |> Seq.iter (fun k ->
-        let blue = (byte (float pixelBuffer.[k] * blueShade))
-        let green = (byte (float pixelBuffer.[k+1] * greenShade))
-        let red = (byte (float pixelBuffer.[k+2] * redShade))
+        let blue = byte ((float (255uy - pixelBuffer.[k])) * blueTint)
+        let green = byte ((float (255uy - pixelBuffer.[k+1])) * greenTint)
+        let red = byte ((float (255uy - pixelBuffer.[k+2])) * redTint)
         pixelBuffer.[k] <- blue
         pixelBuffer.[k+1] <- green
         pixelBuffer.[k+2] <- red
@@ -47,7 +45,7 @@ let applyFilter (rv:float, gv:float, bv:float) (img:Bitmap) =
     let red = rv / 100.
     let green = gv / 100.
     let blue = bv / 100.
-    ColorShade (red, green, blue) img
+    ColorTint (red, green, blue) img
 
 
 let demo() =
@@ -58,7 +56,7 @@ let demo() =
     let filename = @"C:\Users\mhatm\Downloads\image.png"
     let img = LoadImage filename
 
-    let rgb = (50., 50., 50.)
+    let rgb = (100., 100., 100.)
     let img' = applyFilter rgb img
 
     let newFilename = @"C:\Users\mhatm\Downloads\image_modified.jpg"
@@ -68,5 +66,4 @@ let demo() =
 
 
     printfn "\n\n......%s End." demoName
-
 

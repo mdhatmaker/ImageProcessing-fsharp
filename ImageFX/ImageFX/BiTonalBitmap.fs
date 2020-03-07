@@ -1,4 +1,4 @@
-﻿module BitmapShade
+﻿module BiTonalBitmap
 
 
 open System.Drawing
@@ -8,30 +8,44 @@ open ImageFxLib
 
 
 // TODO: convert the 'for' loop into a better Seq operation (even better is parallel Seq)
-let ColorShade (redShade:float, greenShade:float, blueShade:float) (sourceBitmap:Bitmap) =
-    printfn "ColorShade: r=%.2f g=%.2f b=%.2f" redShade greenShade blueShade
+// where threshold is int [0..765]
+let Bitonal (darkColor:Color, lightColor:Color, threshold:int) (sourceBitmap:Bitmap) =
+    printfn "Bitonal: %A   %A   %i" darkColor lightColor threshold
     let sourceData =
         sourceBitmap.LockBits(
             new Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height),
             ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
     let pixelBuffer =
         Array.create (sourceData.Stride * sourceData.Height) 0uy
-
     Marshal.Copy(sourceData.Scan0, pixelBuffer, 0, pixelBuffer.Length)
-
     sourceBitmap.UnlockBits(sourceData)
 
     let ks = [for k in 0..(pixelBuffer.Length-1)/4 do yield k*4]
-    
+
+    let length =
+        ks
+        |> Seq.filter (fun k ->
+            let sum = (pixelBuffer.[k] + pixelBuffer.[k+1] + pixelBuffer.[k+2])
+            (int sum) <= threshold)
+        |> Seq.length
+    printfn "dark/light:  %.1f %%" ((float length) / (float ks.Length) * 100.)
+
     ks
     |> Seq.iter (fun k ->
-        let blue = (byte (float pixelBuffer.[k] * blueShade))
-        let green = (byte (float pixelBuffer.[k+1] * greenShade))
-        let red = (byte (float pixelBuffer.[k+2] * redShade))
-        pixelBuffer.[k] <- blue
-        pixelBuffer.[k+1] <- green
-        pixelBuffer.[k+2] <- red
+        let sum = (pixelBuffer.[k] + pixelBuffer.[k+1] + pixelBuffer.[k+2])
+        if (int sum) <= threshold
+        then
+            pixelBuffer.[k] <- darkColor.B
+            pixelBuffer.[k+1] <- darkColor.G
+            pixelBuffer.[k+2] <- darkColor.R
+        else
+            //printfn "%i  %i" (int sum) threshold
+            pixelBuffer.[k] <- lightColor.B
+            pixelBuffer.[k+1] <- lightColor.G
+            pixelBuffer.[k+2] <- lightColor.R
         )
+
+
 
     let resultBitmap = new Bitmap(sourceBitmap.Width, sourceBitmap.Height)
     let resultData =
@@ -42,12 +56,8 @@ let ColorShade (redShade:float, greenShade:float, blueShade:float) (sourceBitmap
     resultBitmap.UnlockBits(resultData)
     resultBitmap
 
-// where rv, gv, bv are floats 0..100
-let applyFilter (rv:float, gv:float, bv:float) (img:Bitmap) = 
-    let red = rv / 100.
-    let green = gv / 100.
-    let blue = bv / 100.
-    ColorShade (red, green, blue) img
+let applyFilter (darkColor:Color, lightColor:Color, threshold:int) (img:Bitmap) = 
+    Bitonal (darkColor, lightColor, threshold) img
 
 
 let demo() =
@@ -58,8 +68,10 @@ let demo() =
     let filename = @"C:\Users\mhatm\Downloads\image.png"
     let img = LoadImage filename
 
-    let rgb = (50., 50., 50.)
-    let img' = applyFilter rgb img
+    let dark = Color.Black
+    let light = Color.LightBlue
+    let threshold = 180     // 0..765
+    let img' = applyFilter (dark, light, threshold) img
 
     let newFilename = @"C:\Users\mhatm\Downloads\image_modified.jpg"
     SaveNewImage newFilename img'
@@ -68,5 +80,4 @@ let demo() =
 
 
     printfn "\n\n......%s End." demoName
-
 

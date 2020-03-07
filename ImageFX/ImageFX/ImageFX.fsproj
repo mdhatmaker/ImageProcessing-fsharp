@@ -6,7 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Matrix.fs" />
     <Compile Include="ImageFxLib.fs" />
+    <Compile Include="ImageBlur.fs" />
+    <Compile Include="BiTonalBitmap.fs" />
+    <Compile Include="BitmapTint.fs" />
     <Compile Include="BitmapShade.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

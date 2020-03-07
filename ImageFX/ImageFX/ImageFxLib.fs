@@ -1,14 +1,53 @@
 ﻿module ImageFxLib
 
 
-
 open System.Drawing
 open System.Drawing.Drawing2D
 open System.Drawing.Imaging
-open System.Runtime.InteropServices
 open System.IO
+open System.Diagnostics
 
 
+
+/// Execute a bash command
+let Bash (cmd:string) : string =
+    let escapedArgs = cmd.Replace("\"", "\\\"")
+    let mutable process = new Process()
+    let mutable startInfo = new ProcessStartInfo()
+    startInfo.FileName <- "/bin/bash"
+    startInfo.Arguments <- "-c \"" + escapedArgs + "\""
+    startInfo.RedirectStandardOutput <- true
+    startInfo.UseShellExecute <- false
+    startInfo.CreateNoWindow <- true
+    process.StartInfo <- startInfo
+    process.Start()
+    let result = process.StandardOutput.ReadToEnd()
+    process.WaitForExit()
+    result
+    
+let BrowserOpen (filename:string) =
+    printfn "'%s'" filename
+    //ShellOpen "MicrosoftEdgeLauncher.exe " + filename
+    let mutable startInfo = new ProcessStartInfo()
+    //startInfo.FileName <- @"C:\Program Files\Internet Explorer\iexplore.exe"
+    startInfo.FileName <- @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+    startInfo.Arguments <- filename
+    startInfo.RedirectStandardOutput <- true
+    startInfo.UseShellExecute <- false
+    startInfo.CreateNoWindow <- true
+    let mutable process = new Process()
+    process.StartInfo <- startInfo
+    process.Start()
+    //let result = process.StandardOutput.ReadToEnd()
+    //process.WaitForExit()
+    ()
+
+(*let ShellOpen (filename:string) =
+    //let cmd = @"MicrosoftEdgeLauncher.exe file:///C:/something/index.html"
+    let cAction = "open"
+    let cFilename = filename
+    //ShellExecute(0, cAction, cFilename, "", "", 1)
+    ()*)
 
 // TODO: add exception handling for load file
 let LoadImage (filename:string) =
