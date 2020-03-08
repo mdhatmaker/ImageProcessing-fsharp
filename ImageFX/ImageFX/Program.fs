@@ -10,7 +10,8 @@ let main argv =
     //BitmapShade.demo()
     //BitmapTint.demo()
     //BiTonalBitmap.demo()
-    ImageBlur.demo()
+    //ImageBlur.demo()
+    ImageCartoonEffect.demo()
 
 
     0 // return an integer exit code

@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Matrix.fs" />
     <Compile Include="ImageFxLib.fs" />
+    <Compile Include="ImageCartoonEffect.fs" />
     <Compile Include="ImageBlur.fs" />
     <Compile Include="BiTonalBitmap.fs" />
     <Compile Include="BitmapTint.fs" />
